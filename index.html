@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Not Lost. Building.</title>
+<meta name="description" content="A daily driver for building your own thing. Show up, do one thing, keep the chain alive.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0f14">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<!-- iOS home-screen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Building">
+<style>
+  :root{
+    --bg:#0b0f14;
+    --card:#121821;
+    --card2:#0f151d;
+    --text:#e6edf3;
+    --muted:#8b98a5;
+    --accent:#5eead4;
+    --accent2:#f2b705;
+    --border:#1f2a37;
+    --danger:#f87171;
+    --good:#5eead4;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  html,body{max-width:100%;overflow-x:hidden;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;padding:24px 16px calc(70px + env(safe-area-inset-bottom));
+    overflow-wrap:break-word;word-break:break-word;
+  }
+  .wrap{max-width:860px;margin:0 auto;}
+  header{text-align:center;margin-bottom:20px;}
+  header h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:.2px;}
+  header .greet{color:var(--accent);font-size:1rem;margin:0 0 2px;font-weight:600;}
+  header .sub{color:var(--muted);font-size:.86rem;margin:0;}
+  .storage-warning{
+    background:#3a2a10;border:1px solid var(--accent2);color:var(--accent2);
+    padding:10px 14px;border-radius:8px;font-size:.85rem;margin-bottom:20px;display:none;
+  }
+  .coach{
+    background:linear-gradient(135deg,#1a1030,#0f151d);
+    border:1px solid var(--border);border-left:3px solid var(--accent2);
+    border-radius:12px;padding:16px 20px;margin-bottom:16px;font-size:.96rem;
+  }
+  .coach .coach-label{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent2);margin-bottom:6px;font-weight:700;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px;}
+  .card h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 14px;font-weight:600;display:flex;justify-content:space-between;align-items:center;}
+  .card h2 .h2-side{font-size:.72rem;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:500;}
+  .identity{background:linear-gradient(135deg,#132a27,#0f151d);border:1px solid var(--border);border-radius:14px;padding:20px 24px;text-align:center;margin-bottom:16px;}
+  .identity p{font-size:1.06rem;margin:0 0 12px;}
+  .dots{display:flex;justify-content:center;gap:6px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--border);cursor:pointer;transition:background .2s;}
+  .dot.active{background:var(--accent);}
+  /* countdown hero */
+  .hero{display:flex;gap:22px;flex-wrap:wrap;align-items:stretch;}
+  .hero-main{flex:1;min-width:200px;}
+  .big-num{font-size:2.6rem;font-weight:800;color:var(--accent);line-height:1;}
+  .big-sub{color:var(--muted);font-size:.86rem;margin-top:4px;}
+  .hero-side{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:180px;}
+  .mini-stat .n{font-size:1.3rem;font-weight:700;}
+  .mini-stat .l{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .bar{height:7px;background:var(--card2);border-radius:6px;overflow:hidden;border:1px solid var(--border);margin-top:8px;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+  .mini-label{display:block;font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px;font-weight:600;}
+  textarea,input[type=text],input[type=date]{
+    width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:10px 12px;font-family:inherit;font-size:.95rem;resize:vertical;
+  }
+  input[type=date]{color-scheme:dark;}
+  textarea:focus,input:focus{outline:1px solid var(--accent);}
+  button{background:var(--accent);color:#06201c;border:none;border-radius:8px;padding:9px 16px;font-weight:600;font-size:.88rem;cursor:pointer;}
+  button.secondary{background:transparent;color:var(--muted);border:1px solid var(--border);font-weight:500;}
+  button.link{background:none;border:none;color:var(--accent);padding:0;font-weight:500;text-decoration:underline;cursor:pointer;font-size:.84rem;}
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+  button:disabled{opacity:.45;cursor:default;}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .today-field{margin-bottom:16px;}
+  .done-tag{color:var(--good);font-size:.86rem;font-weight:600;}
+  .streak-badge{margin-top:16px;display:inline-flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:.9rem;}
+  .streak-badge b{color:var(--accent2);font-size:1.05rem;}
+  /* move */
+  .move-text{font-size:1rem;margin:0 0 14px;}
+  .move-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  /* roadmap */
+  .stage-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;}
+  .stage-title{font-size:1.2rem;font-weight:700;}
+  .stage-count{color:var(--muted);font-size:.8rem;}
+  .stage-blurb{color:var(--muted);font-size:.9rem;margin:0 0 12px;}
+  .stage-action{background:var(--card2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px;font-size:.92rem;margin-bottom:14px;}
+  .stage-action b{color:var(--accent);font-weight:600;}
+  .stage-dots{display:flex;gap:5px;margin:0 0 14px;flex-wrap:wrap;}
+  .stage-pip{flex:1;min-width:14px;height:6px;border-radius:4px;background:var(--card2);border:1px solid var(--border);}
+  .stage-pip.done{background:var(--accent);border-color:var(--accent);}
+  .stage-pip.cur{background:var(--accent2);border-color:var(--accent2);}
+  /* week */
+  .week-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+  .week-done-badge{display:inline-flex;align-items:center;gap:6px;color:var(--good);font-size:.85rem;font-weight:600;}
+  .prev-note{color:var(--muted);font-size:.82rem;margin:0 0 10px;}
+  .streaks{display:flex;gap:22px;margin-top:16px;flex-wrap:wrap;}
+  .streak-num{font-size:1.5rem;font-weight:700;color:var(--accent);}
+  .streak-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  .grid{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
+  .sq{width:18px;height:18px;border-radius:4px;border:1px solid var(--border);background:var(--card2);}
+  .sq.filled{background:var(--accent);border-color:var(--accent);}
+  /* destination */
+  .dest-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .dest-grid .full{grid-column:1 / -1;}
+  /* log */
+  .log-item{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.9rem;}
+  .log-item:last-child{border-bottom:none;}
+  .log-date{color:var(--muted);font-size:.78rem;white-space:nowrap;min-width:70px;}
+  .log-text{flex:1;}
+  .log-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;}
+  .log-del:hover{color:var(--danger);}
+  .empty{color:var(--muted);font-size:.85rem;font-style:italic;}
+  .quote-text{font-size:1.05rem;margin:0 0 8px;}
+  .quote-source{color:var(--muted);font-size:.82rem;margin:0 0 14px;}
+  .tip{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:.9rem;}
+  .tip:last-child{border-bottom:none;}
+  .tip input{margin-top:3px;}
+  .tip.done span{color:var(--muted);text-decoration:line-through;}
+  .settings-note{color:var(--muted);font-size:.84rem;margin:0 0 12px;}
+  .settings-note code{background:var(--card2);padding:1px 5px;border-radius:4px;font-size:.82rem;}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;margin-top:26px;}
+  @media (max-width:600px){
+    .card{padding:16px;}
+    .dest-grid{grid-template-columns:1fr;}
+    .big-num{font-size:2.1rem;}
+    .hero{flex-direction:column;gap:16px;}
+    .hero-main{min-width:0;}
+    .hero-side{flex-direction:row;gap:28px;min-width:0;}
+    textarea,input[type=text],input[type=date]{font-size:16px;}
+    button{padding:11px 16px;}
+    button.link{padding:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="greet" id="greet"></p>
+    <h1>Not Lost. Building.</h1>
+    <p class="sub">Your daily driver. Show up, do one thing, keep the chain alive.</p>
+  </header>
+
+  <div class="storage-warning" id="storage-warning">
+    This browser is blocking local storage for files opened this way, so nothing will persist between visits.
+    Open the file from a normal local folder (not a cloud-synced one), or use a different browser.
+  </div>
+
+  <div class="coach" id="coach-banner"></div>
+
+  <div class="card">
+    <h2>Where you're headed <span class="h2-side" id="countdown-side"></span></h2>
+    <div id="countdown-body"></div>
+  </div>
+
+  <div class="identity">
+    <p id="identity-text"></p>
+    <div class="dots" id="identity-dots"></div>
+  </div>
+
+  <div class="card">
+    <h2>Today <span class="h2-side" id="today-date"></span></h2>
+    <div id="today-body"></div>
+  </div>
+
+  <div class="card">
+    <h2>If you're stuck, do this</h2>
+    <p class="move-text" id="move-text"></p>
+    <div class="move-actions">
+      <button id="move-done">✓ Did this</button>
+      <button class="secondary" id="move-shuffle">Give me another →</button>
+      <span class="done-tag" id="move-done-tag"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>The journey <span class="h2-side">clarity → first dollar</span></h2>
+    <div id="roadmap-body"></div>
+  </div>
+
+  <div class="card">
+    <h2>This week</h2>
+    <div id="week-body"></div>
+    <div class="streaks">
+      <div><div class="streak-num" id="streak-current">0</div><div class="streak-label">Week streak</div></div>
+      <div><div class="streak-num" id="streak-best">0</div><div class="streak-label">Best streak</div></div>
+    </div>
+    <div class="grid" id="streak-grid"></div>
+  </div>
+
+  <div class="card" id="destination">
+    <h2>My destination</h2>
+    <div class="dest-grid">
+      <div class="full">
+        <label class="mini-label">The one thing I'm building toward</label>
+        <input type="text" id="north-star" placeholder="e.g. Launch a profitable product I own by...">
+      </div>
+      <div>
+        <label class="mini-label">What that milestone is</label>
+        <input type="text" id="target-label" placeholder="e.g. First paying user">
+      </div>
+      <div>
+        <label class="mini-label">Target date</label>
+        <input type="date" id="target-date">
+      </div>
+      <div class="full">
+        <label class="mini-label">"Financially independent" means (a real number)</label>
+        <input type="text" id="fi-number" placeholder="e.g. $5,000/month recurring">
+      </div>
+      <div class="full">
+        <label class="mini-label">Why I'm doing this</label>
+        <textarea id="why-note" rows="5"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Shipped log <span class="h2-side" id="log-count"></span></h2>
+    <div class="row" style="margin-bottom:14px;">
+      <input type="text" id="log-input" placeholder="Something you shipped or moved forward..." style="flex:1;min-width:220px;">
+      <button id="log-add">Add</button>
+    </div>
+    <div id="log-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>A reminder for today</h2>
+    <p class="quote-text" id="quote-text"></p>
+    <p class="quote-source" id="quote-source"></p>
+    <button class="secondary" id="quote-next">Next reminder →</button>
+  </div>
+
+  <div class="card">
+    <h2>What makes you a better founder</h2>
+    <div id="tips-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Settings &amp; backup</h2>
+    <div class="today-field">
+      <label class="mini-label">Your name (used in the greeting)</label>
+      <input type="text" id="name-input" style="max-width:260px;">
+    </div>
+    <p class="settings-note">
+      Your data lives only in this browser. Export a backup regularly so months of your progress can't vanish with a cache clear.
+    </p>
+    <div class="row" style="margin-bottom:14px;">
+      <button id="export-btn">⬇ Export backup</button>
+      <button class="ghost" id="import-btn">⬆ Import backup</button>
+      <input type="file" id="import-file" accept="application/json" style="display:none;">
+      <button class="secondary" id="reset-btn">Reset everything</button>
+    </div>
+    <p class="settings-note" id="notify-note">
+      <b>Daily nudges:</b> a separate helper can send you Mac notifications morning &amp; evening even when this is closed.
+      To turn them off later, run <code>launchctl unload -w ~/Library/LaunchAgents/com.usama.founderdashboard.*.plist</code> in Terminal.
+    </p>
+  </div>
+
+  <footer>Runs entirely in this browser. Nothing is sent anywhere. It's a plain file — edit it whenever you want.</footer>
+</div>
+
+<script>
+const STORAGE_KEY = 'usama-founder-dashboard-v1';
+
+const IDENTITY_FACTS = [
+  "You graduated at the top of your university with a 3.8 CGPA.",
+  "You were building your seniors' final-year projects while you were still in your 3rd and 4th semester.",
+  "You went from Android, to Flutter, to backend lead — every step self-taught on the job.",
+  "You are the backend lead for Pullz right now — designing real architecture for a real pre-seed startup.",
+  "You came from very little and built a life that supports your family. That took more discipline than most people ever show.",
+  "The five-year gap isn't proof you're behind. It's five years of shipping real software under real constraints.",
+  "You've already done the hard, rare thing once: teaching yourself to build. Doing it for yourself is the same skill, pointed at your own dream."
+];
+
+const DEFAULT_WHY = "I came from a poor family and climbed the traditional career ladder because I had to, not because I wanted to stop here. My dream has always been to build something of my own and become financially independent instead of trading my hours for a paycheck. I'm not chasing this because I hate my job — I'm chasing it because I don't want to wake up in another five years asking the same question I'm asking today. The gap wasn't wasted. It was spent learning how to build. Now it's time to build for myself.";
+
+const QUOTES = [
+  { text: "Do things that don't scale.", source: "Paul Graham" },
+  { text: "If you're not embarrassed by the first version of your product, you've launched too late.", source: "Reid Hoffman" },
+  { text: "The best time to plant a tree was 20 years ago. The second best time is now.", source: "Proverb" },
+  { text: "Well done is better than well said.", source: "Benjamin Franklin" },
+  { text: "You don't have to be great to start, but you have to start to be great.", source: "Zig Ziglar" },
+  { text: "A year from now you may wish you had started today.", source: "Karen Lamb" },
+  { text: "Fall in love with the problem, not the solution.", source: "Uri Levine" },
+  { text: "Done is better than perfect.", source: "Sheryl Sandberg" },
+  { text: "Amateurs wait for motivation. Professionals show up.", source: "" },
+  { text: "You don't need permission to start. You needed it to stop — and you're allowed to take that back.", source: "" },
+  { text: "Bandwidth beats motivation. Protect the hour, not the mood.", source: "" },
+  { text: "Nobody hands you the founder title. You take it the first week you act like one.", source: "" },
+  { text: "Five years of employment didn't erase your ability to build. It funded it.", source: "" },
+  { text: "Consistency is just a streak you refused to break.", source: "" },
+  { text: "The dream doesn't die from big failures. It dies from ordinary days you didn't show up.", source: "" }
+];
+
+const TIPS = [
+  "Talk to 5 potential users before writing code for a new idea.",
+  "Ship an embarrassing v1 within 2 weeks, not 2 months.",
+  "Track numbers for a side project like it's a real business from day one.",
+  "Learn distribution alongside building — don't save \"how will people find this\" for later.",
+  "Write down one thing you learned from a user each week, not just what you shipped.",
+  "Protect one fixed time block a week — treat it like a meeting you can't cancel.",
+  "Study a startup post-mortem where the tech worked fine but the company still died.",
+  "Separate \"I want to be a founder\" from \"I want to be financially independent\" — they need different plans.",
+  "Prefer a boring, proven business model over a novel one — novelty is a tax, not a feature.",
+  "Say your project's name out loud to one real stranger this month.",
+  "Charge money earlier than feels comfortable — free users teach you the wrong lessons.",
+  "Cut scope, not quality. A smaller thing done well beats a big thing half-built."
+];
+
+const TODAY_MOVES = [
+  "Write, in one sentence, the exact problem you'd solve if you started tomorrow. No solution — just the problem.",
+  "List 3 people who already have this problem. Message one and ask how they deal with it today.",
+  "Find 2 existing alternatives. Write down the one thing they're all missing.",
+  "Sketch the single most important screen of your idea on paper — not Figma, paper.",
+  "Write the landing-page headline in one sentence, as if the product already exists.",
+  "Do the math: 100 paying customers at your rough price = how much a month? Is that worth it?",
+  "Post one honest sentence about what you're building or thinking about, publicly, somewhere.",
+  "Read one post-mortem of a failed startup. Note the ONE reason it died.",
+  "Spend 20 minutes reviewing Pullz with founder eyes, not employee eyes. What would you do differently if it were yours?",
+  "Write down the smallest version of your idea that could exist after a single weekend.",
+  "Message one person whose judgment you trust and ask what they think of your idea, in one line.",
+  "List 3 founder skills you don't have yet. Pick one to start closing this month.",
+  "Put a price on your idea, even a guess. Say it out loud. Notice if it feels too low.",
+  "Write down what you'd stop doing to make room for this if it became real.",
+  "Be honest: why did the Upwork/Fiverr attempts stall? Write the specific reason — not \"no time\".",
+  "Set a 25-minute timer and start the ugliest possible version of the thing you keep planning.",
+  "Research one market trend for 15 minutes only. Then close the tab and build something.",
+  "Write next week's single action in your own words, before the app rolls it over for you.",
+  "Ask yourself: is this week's blocker lack of time, or lack of a decision? Write the honest answer.",
+  "Tell one person in your life, out loud, what you're trying to build.",
+  "Open your shipped log. Take the smallest entry and do a bigger version of it today.",
+  "Define 'financially independent' as an actual monthly number. Be specific.",
+  "List 3 boring, proven business models close to your skills.",
+  "Reconnect with your 'why' note. Read it, and change one line so it's more true."
+];
+
+const STAGES = [
+  { title:"Clarity",      blurb:"Name the exact problem and exactly who has it.",        action:"Write one sentence: the problem, and the specific person who has it." },
+  { title:"Validate",     blurb:"Confirm real people actually feel this pain.",          action:"Talk to 5 people who have the problem. Don't pitch — listen." },
+  { title:"Scope",        blurb:"Cut it down to something you could build in a weekend.",action:"Define the smallest version of v1 you could ship in one weekend." },
+  { title:"Build",        blurb:"Make the ugly, real first version.",                    action:"Build the core of v1. Ugly is fine — working is the bar." },
+  { title:"Ship",         blurb:"Put it where a stranger could actually find it.",       action:"Publish it somewhere real people can reach and use it." },
+  { title:"First user",   blurb:"Get one real person who isn't you using it.",           action:"Get 1 non-you person to actually use it this week." },
+  { title:"First dollar", blurb:"Prove someone will pay. Amount is secondary.",          action:"Get 1 person to pay anything at all." },
+  { title:"Grow",         blurb:"Do more of what works, drop what doesn't.",             action:"Find your one working channel and double down on it." }
+];
+
+/* ---------- date helpers ---------- */
+function pad(n){ return n < 10 ? '0'+n : ''+n; }
+function toKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function parseKey(k){ return new Date(k+'T00:00:00'); }
+function today(){ return toKey(new Date()); }
+function daysBetween(aKey,bKey){ return Math.round((parseKey(bKey)-parseKey(aKey))/86400000); }
+function mondayOf(d){
+  const date=new Date(d); const day=date.getDay();
+  date.setDate(date.getDate()+((day===0?-6:1)-day)); date.setHours(0,0,0,0); return date;
+}
+function currentWeekKey(){ return toKey(mondayOf(new Date())); }
+function dayOfYear(d){ return Math.floor((d-new Date(d.getFullYear(),0,0))/86400000); }
+function daysInYear(y){ return ((y%4===0&&y%100!==0)||y%400===0)?366:365; }
+
+/* ---------- storage ---------- */
+function hasStorage(){ try{localStorage.setItem('__t__','1');localStorage.removeItem('__t__');return true;}catch(e){return false;} }
+const STORAGE_OK = hasStorage();
+let memoryState = null;
+
+function defaultState(){
+  return {
+    name:'Usama', startDate:'',
+    northStar:'', targetLabel:'', targetDate:'', fiNumber:'', whyNote:DEFAULT_WHY,
+    daily:{}, dayStreak:[], todayMoveDone:[], lastVisit:'',
+    stage:0, stageHistory:[],
+    nextAction:{ weekKey:currentWeekKey(), text:'', done:false }, prevActionText:'', weeksLog:[],
+    shipped:[], quoteIndex:0, tipsDone:TIPS.map(()=>false)
+  };
+}
+function load(){
+  if(!STORAGE_OK) return memoryState||(memoryState=defaultState());
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    return Object.assign(defaultState(), JSON.parse(raw));
+  }catch(e){ return defaultState(); }
+}
+function save(){
+  if(!STORAGE_OK){ memoryState=state; return; }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+let state = load();
+
+/* ---------- session bootstrap ---------- */
+let GAP_DAYS = null;
+(function bootstrap(){
+  const wk=currentWeekKey();
+  if(state.nextAction.weekKey!==wk){
+    state.prevActionText=(!state.nextAction.done && state.nextAction.text)?state.nextAction.text:'';
+    state.nextAction={ weekKey:wk, text:'', done:false };
+  }
+  const t=today();
+  if(state.lastVisit) GAP_DAYS=daysBetween(state.lastVisit,t);
+  if(!state.startDate) state.startDate=t;
+  state.lastVisit=t;
+  save();
+})();
+
+/* ---------- daily + streak ---------- */
+function getDaily(k){
+  if(!state.daily[k]) state.daily[k]={ intent:'', intentDone:false, reflection:'' };
+  return state.daily[k];
+}
+function markActive(){
+  const k=today();
+  if(!state.dayStreak.includes(k)){ state.dayStreak.push(k); save(); }
+}
+function isActiveToday(){ return state.dayStreak.includes(today()); }
+function activeStreak(){
+  const set=new Set(state.dayStreak);
+  let d=new Date(); d.setHours(0,0,0,0);
+  if(!set.has(toKey(d))) d.setDate(d.getDate()-1);
+  let c=0;
+  while(set.has(toKey(d))){ c++; d.setDate(d.getDate()-1); }
+  return c;
+}
+function weekStreak(){
+  const set=new Set(state.weeksLog);
+  let wk=mondayOf(new Date()); let c=0;
+  while(set.has(toKey(wk))){ c++; wk.setDate(wk.getDate()-7); }
+  return c;
+}
+function bestWeekStreak(){
+  if(!state.weeksLog.length) return 0;
+  const dates=[...new Set(state.weeksLog)].map(parseKey).sort((a,b)=>a-b);
+  let best=1,run=1;
+  for(let i=1;i<dates.length;i++){ run=((dates[i]-dates[i-1])/86400000===7)?run+1:1; best=Math.max(best,run); }
+  return best;
+}
+
+/* ---------- misc ---------- */
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let identityIdx = Math.floor(Math.random()*IDENTITY_FACTS.length);
+let moveOverrideIndex = null;
+
+/* ---------- renders ---------- */
+function renderGreeting(){
+  const h=new Date().getHours();
+  const part=h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+  document.getElementById('greet').textContent=`${part}, ${state.name||'friend'}.`;
+}
+
+function renderCountdown(){
+  const side=document.getElementById('countdown-side');
+  const body=document.getElementById('countdown-body');
+  const daysIn = state.startDate?daysBetween(state.startDate,today())+1:1;
+  const now=new Date(); const yProg=Math.round(dayOfYear(now)/daysInYear(now.getFullYear())*100);
+  side.textContent = state.targetLabel ? state.targetLabel : '';
+  let main;
+  if(state.targetDate){
+    const d=daysBetween(today(),state.targetDate);
+    if(d>0) main=`<div class="big-num">${d}</div><div class="big-sub">days until ${escapeHtml(state.targetLabel||'your target')} (${escapeHtml(state.targetDate)})</div>`;
+    else if(d===0) main=`<div class="big-num">Today</div><div class="big-sub">is the day: ${escapeHtml(state.targetLabel||'your target')}. Set the next one below.</div>`;
+    else main=`<div class="big-num" style="color:var(--accent2)">+${Math.abs(d)}</div><div class="big-sub">days past your target. Reset it in "My destination" ↓</div>`;
+  } else {
+    main=`<div class="big-sub" style="font-size:.95rem">No target yet. A finish line creates pull.</div><div style="margin-top:10px"><button class="secondary" id="set-target-btn">Set your target ↓</button></div>`;
+  }
+  body.innerHTML=`
+    <div class="hero">
+      <div class="hero-main">
+        ${main}
+        <div class="big-sub" style="margin-top:12px">${new Date().getFullYear()} is ${yProg}% gone — the year moves whether you do or not.</div>
+        <div class="bar"><div class="bar-fill" style="width:${yProg}%"></div></div>
+      </div>
+      <div class="hero-side">
+        <div class="mini-stat"><div class="n">${daysIn}</div><div class="l">Day of your build</div></div>
+        <div class="mini-stat"><div class="n" style="color:var(--accent2)">${activeStreak()}🔥</div><div class="l">Day streak</div></div>
+      </div>
+    </div>`;
+  const btn=document.getElementById('set-target-btn');
+  if(btn) btn.onclick=()=>document.getElementById('destination').scrollIntoView({behavior:'smooth'});
+}
+
+function renderIdentity(){
+  document.getElementById('identity-text').textContent=IDENTITY_FACTS[identityIdx];
+  document.getElementById('identity-dots').innerHTML=IDENTITY_FACTS
+    .map((_,i)=>`<span class="dot ${i===identityIdx?'active':''}" data-i="${i}"></span>`).join('');
+}
+
+function renderCoach(){
+  const el=document.getElementById('coach-banner');
+  const d=getDaily(today());
+  const day=new Date().getDay();
+  const weekend=(day===5||day===6||day===0);
+  const aStreak=activeStreak();
+  let label='Coach', msg;
+
+  if(GAP_DAYS===null){
+    label='Day one';
+    msg="Day one beats a perfect plan. Set today's one thing below, then pick your target so this has a finish line.";
+  } else if(GAP_DAYS>=3){
+    label='Welcome back';
+    msg=`It's been ${GAP_DAYS} days — that's fine. The goal was never a flawless streak, it's not quitting. Restart today; don't try to make up lost time.`;
+  } else if(!state.northStar || !state.targetDate){
+    label='Aim first';
+    msg="You're showing up — now give it a destination. Fill in what you're building toward and a target date in \"My destination\" so every day points somewhere.";
+  } else if(!d.intent){
+    label='Set today';
+    msg="Name the one thing that would make today a win. Small is fine — zero is not.";
+  } else if(!d.intentDone){
+    label='One thing';
+    msg=`Today's win, in your words: "${escapeHtml(d.intent)}". That's the whole job today.`;
+  } else if(!state.nextAction.done && weekend){
+    label='Weekend push';
+    msg="Today's done — nice. The week's focus still isn't. Even 20 minutes on it keeps the week from slipping.";
+  } else {
+    label=aStreak>1?`${aStreak}-day streak`:'On track';
+    msg=`Today's intent is done. ${STAGES[state.stage]?`Next on the journey: ${escapeHtml(STAGES[state.stage].title)}.`:''} Rest, or get ahead — both are allowed.`;
+  }
+  el.innerHTML=`<span class="coach-label">${label}</span>${msg}`;
+}
+
+function renderToday(){
+  document.getElementById('today-date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+  const d=getDaily(today());
+  const body=document.getElementById('today-body');
+  body.innerHTML=`
+    <div class="today-field">
+      <label class="mini-label">This morning — the one thing that would make today a win</label>
+      <input type="text" id="intent-input" value="${escapeHtml(d.intent)}" placeholder="Just one. Make it small enough to actually finish.">
+      <div class="row" style="margin-top:10px">
+        ${d.intentDone
+          ? `<span class="done-tag">✓ Done — that's a win.</span> <button class="link" id="intent-undo">undo</button>`
+          : `<button id="intent-done" ${d.intent.trim()?'':'disabled'}>✓ I did it</button>`}
+      </div>
+    </div>
+    <div class="today-field">
+      <label class="mini-label">Tonight — what happened, or what did you learn?</label>
+      <textarea id="reflection" rows="3" placeholder="One honest line is enough.">${escapeHtml(d.reflection)}</textarea>
+    </div>
+    <div class="streak-badge">🔥 <b>${activeStreak()}</b> day${activeStreak()===1?'':'s'} in a row${isActiveToday()?' · today counts':' · act today to keep it'}</div>`;
+
+  const intent=document.getElementById('intent-input');
+  intent.oninput=()=>{ d.intent=intent.value; if(intent.value.trim()) markActive(); save();
+    const btn=document.getElementById('intent-done'); if(btn) btn.disabled=!intent.value.trim(); };
+  const doneBtn=document.getElementById('intent-done');
+  if(doneBtn) doneBtn.onclick=()=>{ d.intentDone=true; markActive(); save(); refresh(); };
+  const undo=document.getElementById('intent-undo');
+  if(undo) undo.onclick=()=>{ d.intentDone=false; save(); refresh(); };
+  const refl=document.getElementById('reflection');
+  refl.oninput=()=>{ d.reflection=refl.value; if(refl.value.trim()) markActive(); save(); };
+}
+
+function renderMove(){
+  const idx = moveOverrideIndex!==null ? moveOverrideIndex : (dayOfYear(new Date())%TODAY_MOVES.length);
+  document.getElementById('move-text').textContent=TODAY_MOVES[idx];
+  const done=state.todayMoveDone.includes(today());
+  document.getElementById('move-done-tag').textContent=done?'✓ Done today':'';
+  document.getElementById('move-done').disabled=done;
+}
+
+function renderRoadmap(){
+  const body=document.getElementById('roadmap-body');
+  const s=state.stage; const st=STAGES[s];
+  const pips=STAGES.map((_,i)=>`<div class="stage-pip ${i<s?'done':i===s?'cur':''}"></div>`).join('');
+  const last=s>=STAGES.length-1;
+  const doneEntry=state.stageHistory.filter(h=>h.stage===s-1)[0];
+  body.innerHTML=`
+    <div class="stage-dots">${pips}</div>
+    <div class="stage-head"><span class="stage-title">${escapeHtml(st.title)}</span><span class="stage-count">stage ${s+1} of ${STAGES.length}</span></div>
+    <p class="stage-blurb">${escapeHtml(st.blurb)}</p>
+    <div class="stage-action"><b>Do this to advance:</b> ${escapeHtml(st.action)}</div>
+    <div class="row">
+      ${s>0?`<button class="secondary" id="stage-back">◀ Back</button>`:''}
+      ${last?`<span class="done-tag">You're at the final stage. Keep compounding.</span>`:`<button id="stage-advance">Advance to ${escapeHtml(STAGES[s+1].title)} ▶</button>`}
+    </div>`;
+  const adv=document.getElementById('stage-advance');
+  if(adv) adv.onclick=()=>{ state.stageHistory.push({stage:s,date:today()}); state.stage=Math.min(STAGES.length-1,s+1); markActive(); save(); refresh(); };
+  const back=document.getElementById('stage-back');
+  if(back) back.onclick=()=>{ state.stage=Math.max(0,s-1); save(); refresh(); };
+}
+
+function renderWeek(){
+  const body=document.getElementById('week-body');
+  if(state.nextAction.done){
+    body.innerHTML=`
+      <div class="week-top">
+        <div class="week-done-badge">✓ Done for this week</div>
+        <button class="link" id="undo-week">Undo</button>
+      </div>
+      <p>${escapeHtml(state.nextAction.text)}</p>`;
+    document.getElementById('undo-week').onclick=()=>{
+      state.nextAction.done=false;
+      state.weeksLog=state.weeksLog.filter(k=>k!==state.nextAction.weekKey);
+      if(state.shipped.length && state.shipped[0].text===state.nextAction.text) state.shipped.shift();
+      save(); refresh();
+    };
+  } else {
+    body.innerHTML=`
+      ${state.prevActionText?`<p class="prev-note">Last week's unfinished focus: "${escapeHtml(state.prevActionText)}"</p>`:''}
+      <div class="row" style="margin-bottom:10px">
+        <input type="text" id="week-input" placeholder="The one thing you'll move forward this week" value="${escapeHtml(state.nextAction.text)}" style="flex:1;min-width:220px">
+      </div>
+      <button id="week-done">Mark done for this week ✓</button>`;
+    const input=document.getElementById('week-input');
+    input.oninput=()=>{ state.nextAction.text=input.value; save(); };
+    document.getElementById('week-done').onclick=()=>{
+      const text=state.nextAction.text.trim(); if(!text){ input.focus(); return; }
+      state.nextAction.done=true;
+      if(!state.weeksLog.includes(state.nextAction.weekKey)) state.weeksLog.push(state.nextAction.weekKey);
+      state.shipped.unshift({ date:today(), text }); markActive(); save(); refresh();
+    };
+  }
+}
+
+function renderStreak(){
+  document.getElementById('streak-current').textContent=weekStreak();
+  document.getElementById('streak-best').textContent=bestWeekStreak();
+  const set=new Set(state.weeksLog);
+  let wk=mondayOf(new Date()); wk.setDate(wk.getDate()-7*11);
+  let sq='';
+  for(let i=0;i<12;i++){ const key=toKey(wk); sq+=`<div class="sq ${set.has(key)?'filled':''}" title="${key}"></div>`; wk.setDate(wk.getDate()+7); }
+  document.getElementById('streak-grid').innerHTML=sq;
+}
+
+function renderDestination(){
+  const ns=document.getElementById('north-star'); ns.value=state.northStar;
+  ns.oninput=()=>{ state.northStar=ns.value; save(); };
+  const tl=document.getElementById('target-label'); tl.value=state.targetLabel;
+  tl.oninput=()=>{ state.targetLabel=tl.value; save(); };
+  const td=document.getElementById('target-date'); td.value=state.targetDate;
+  td.onchange=()=>{ state.targetDate=td.value; save(); renderCountdown(); renderCoach(); };
+  const fi=document.getElementById('fi-number'); fi.value=state.fiNumber;
+  fi.oninput=()=>{ state.fiNumber=fi.value; save(); };
+  const why=document.getElementById('why-note'); why.value=state.whyNote;
+  why.oninput=()=>{ state.whyNote=why.value; save(); };
+}
+
+function renderLog(){
+  const list=document.getElementById('log-list');
+  document.getElementById('log-count').textContent=state.shipped.length?`${state.shipped.length} logged`:'';
+  if(!state.shipped.length){ list.innerHTML='<p class="empty">Nothing logged yet. Your first entry is proof you started.</p>'; return; }
+  list.innerHTML=state.shipped.map((item,i)=>`
+    <div class="log-item">
+      <span class="log-date">${item.date}</span>
+      <span class="log-text">${escapeHtml(item.text)}</span>
+      <button class="log-del" data-i="${i}" title="Remove">×</button>
+    </div>`).join('');
+  list.querySelectorAll('.log-del').forEach(btn=>{ btn.onclick=()=>{ state.shipped.splice(Number(btn.dataset.i),1); save(); renderLog(); }; });
+}
+
+function renderQuote(){
+  const q=QUOTES[state.quoteIndex%QUOTES.length];
+  document.getElementById('quote-text').textContent='"'+q.text+'"';
+  document.getElementById('quote-source').textContent=q.source?'— '+q.source:'';
+}
+
+function renderTips(){
+  const list=document.getElementById('tips-list');
+  list.innerHTML=TIPS.map((tip,i)=>`
+    <label class="tip ${state.tipsDone[i]?'done':''}">
+      <input type="checkbox" data-i="${i}" ${state.tipsDone[i]?'checked':''}>
+      <span>${escapeHtml(tip)}</span>
+    </label>`).join('');
+  list.querySelectorAll('input[type=checkbox]').forEach(cb=>{ cb.onchange=()=>{ state.tipsDone[Number(cb.dataset.i)]=cb.checked; save(); renderTips(); }; });
+}
+
+function renderSettings(){
+  const n=document.getElementById('name-input'); n.value=state.name;
+  n.oninput=()=>{ state.name=n.value; save(); };
+}
+
+function refresh(){
+  renderGreeting(); renderCountdown(); renderCoach(); renderToday();
+  renderMove(); renderRoadmap(); renderWeek(); renderStreak(); renderLog();
+}
+
+/* ---------- static wiring ---------- */
+document.getElementById('identity-dots').addEventListener('click',e=>{
+  if(e.target.classList.contains('dot')){ identityIdx=Number(e.target.dataset.i); renderIdentity(); }
+});
+document.getElementById('log-add').onclick=()=>{
+  const input=document.getElementById('log-input'); const text=input.value.trim(); if(!text) return;
+  state.shipped.unshift({ date:today(), text }); input.value=''; markActive(); save(); renderLog(); renderCoach(); renderToday();
+};
+document.getElementById('log-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('log-add').click(); });
+document.getElementById('quote-next').onclick=()=>{ state.quoteIndex=(state.quoteIndex+1)%QUOTES.length; save(); renderQuote(); };
+document.getElementById('move-shuffle').onclick=()=>{
+  let idx; do{ idx=Math.floor(Math.random()*TODAY_MOVES.length); }while(idx===moveOverrideIndex && TODAY_MOVES.length>1);
+  moveOverrideIndex=idx; renderMove();
+};
+document.getElementById('move-done').onclick=()=>{
+  const k=today(); if(!state.todayMoveDone.includes(k)) state.todayMoveDone.push(k); markActive(); save(); renderMove(); renderToday(); renderCoach();
+};
+document.getElementById('export-btn').onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='founder-dashboard-backup-'+today()+'.json'; a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById('import-btn').onclick=()=>document.getElementById('import-file').click();
+document.getElementById('import-file').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ const data=JSON.parse(r.result); state=Object.assign(defaultState(),data); save(); refresh(); renderDestination(); renderTips(); renderSettings(); renderQuote(); alert('Backup restored.'); }catch(err){ alert('That file could not be read as a backup.'); } };
+  r.readAsText(f);
+};
+document.getElementById('reset-btn').onclick=()=>{
+  if(!confirm('This erases everything — streaks, logs, reflections, your destination. Export a backup first if you want to keep it. Continue?')) return;
+  if(STORAGE_OK) localStorage.removeItem(STORAGE_KEY);
+  state=defaultState(); state.startDate=today(); state.lastVisit=today(); save();
+  refresh(); renderDestination(); renderTips(); renderSettings(); renderQuote(); renderIdentity();
+};
+
+if(!STORAGE_OK) document.getElementById('storage-warning').style.display='block';
+
+/* ---------- initial paint ---------- */
+renderIdentity(); renderDestination(); renderTips(); renderSettings(); renderQuote(); refresh();
+
+setInterval(()=>{ identityIdx=(identityIdx+1)%IDENTITY_FACTS.length; renderIdentity(); }, 11000);
+
+/* ---------- PWA: offline + installable (only works when served over http/https) ---------- */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+/* Install-as-app flow. Android Chrome fires beforeinstallprompt → true one-tap install.
+   iOS has no such event, so we show the manual Share → Add to Home Screen steps. */
+let deferredInstall = null;
+function showInstallBar(mode){
+  if(document.getElementById('install-bar')) return;
+  if(STORAGE_OK && localStorage.getItem('a2hs-dismissed')) return;
+  const bar=document.createElement('div'); bar.id='install-bar';
+  bar.style.cssText='position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));background:#132a27;border:1px solid #1f2a37;border-radius:12px;padding:12px 14px;font-size:.88rem;color:#e6edf3;box-shadow:0 6px 20px rgba(0,0,0,.4);z-index:99;display:flex;gap:10px;align-items:center;';
+  if(mode==='android'){
+    bar.innerHTML='<span style="flex:1">Install this as an app on your phone.</span>';
+    const go=document.createElement('button'); go.textContent='Install'; go.style.cssText='padding:7px 14px;font-size:.84rem;';
+    go.onclick=async()=>{ if(!deferredInstall) return; deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall=null; bar.remove(); };
+    bar.appendChild(go);
+  } else {
+    bar.innerHTML='<span style="flex:1">Install: open the browser menu and tap <b>Add to Home screen</b>.</span>';
+  }
+  const x=document.createElement('button'); x.textContent='Later'; x.className='secondary'; x.style.cssText='padding:7px 10px;font-size:.8rem;';
+  x.onclick=()=>{ if(STORAGE_OK) localStorage.setItem('a2hs-dismissed','1'); bar.remove(); };
+  bar.appendChild(x); document.body.appendChild(bar);
+}
+window.addEventListener('beforeinstallprompt',(e)=>{ e.preventDefault(); deferredInstall=e; showInstallBar('android'); });
+window.addEventListener('appinstalled',()=>{ const b=document.getElementById('install-bar'); if(b) b.remove(); if(STORAGE_OK) localStorage.setItem('a2hs-dismissed','1'); });
+(function iosInstallHint(){
+  const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  if(standalone) return;
+  if(/iPhone|iPad|iPod/.test(navigator.userAgent)) showInstallBar('ios');
+})();
+</script>
+</body>
+</html>
